@@ -1,9 +1,9 @@
-obj-m += custommodule.o
+obj-m += task1_module.o
 SHELL=/bin/bash
 
 K_VER=$(shell uname -r)
 PWD := $(CURDIR)
-MODULE=custommodule
+MODULE=task1_module
 DRIVER=customled
 
 

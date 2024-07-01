@@ -2,7 +2,7 @@
 // Created by poti on 01/07/24.
 //
 
-#include "custommodule.h"
+#include "task2_module.h"
 
 MODULE_AUTHOR("podpecan.andraz28@gmail.com");
 MODULE_DESCRIPTION("Custom character device driver");
