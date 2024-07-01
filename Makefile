@@ -31,3 +31,6 @@ unload:
 clean:
 	make -C /lib/modules/$(K_VER)/build M=$(PWD) clean
 
+test:
+	gcc -o test_prog test.c
+	@./test_prog

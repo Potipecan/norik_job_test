@@ -21,7 +21,6 @@ enum {
 
 
 static int major;
-static int acc_count = 0;
 static atomic_t already_open = ATOMIC_INIT(CDEV_NOT_USED);
 static struct class *cls;
 
@@ -41,7 +40,7 @@ int custom_module_init(void){
         printk("Char device registering failed with %d\n", major);
         return major;
     }
-    printk("Char device registering succeeded with major %d\n", major);
+    printk(DEVICE_NAME ": Char device registering succeeded with major %d\n", major);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
 
@@ -54,33 +53,36 @@ int custom_module_init(void){
 #endif
 
     device_create(cls, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
-    pr_info("Device created on /dev/%s\n", DEVICE_NAME);
+    pr_info(DEVICE_NAME ": Device created on /dev/%s\n", DEVICE_NAME);
     
     return SUCCESS;
 }
 
 void custom_module_exit(void){
-    printk("Custom character device EXIT");
+    printk(DEVICE_NAME ": Custom character device EXIT");
     device_destroy(cls, MKDEV(major, 0));
     class_destroy(cls);
     unregister_chrdev(major, DEVICE_NAME);
 }
 
 long int custom_module_ioctl(struct file *file, unsigned int cmd, long unsigned int arg){
-    printk("IOCTL call. NAME: %s, PID: %d", current->comm, current->pid);
+    printk(DEVICE_NAME ": IOCTL call. NAME: %s, PID: %d", current->comm, current->pid);
     return SUCCESS;
 }
 
 int custom_module_open(struct inode *inode, struct file *file){
-    if (acc_count){
-        printk("Invalid access");
+    if (atomic_cmpxchg(&already_open, CDEV_NOT_USED, CDEV_EXCLUSIVE_OPEN)){
+        pr_err(DEVICE_NAME ": Invalid access");
         return -EBUSY;
     }
-    ++acc_count;
+    try_module_get(THIS_MODULE);
+    pr_info(DEVICE_NAME ": Device opened");
     return SUCCESS;
 }
 
 int custom_module_release(struct inode *inode, struct file *file){
-    --acc_count;
+    atomic_set(&already_open, CDEV_NOT_USED);
+    module_put(THIS_MODULE);
+    pr_info(DEVICE_NAME ": Device released");
     return SUCCESS;
 }
